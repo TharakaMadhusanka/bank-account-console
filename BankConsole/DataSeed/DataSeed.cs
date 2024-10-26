@@ -1,7 +1,7 @@
 ﻿using Domain;
 using System.Globalization;
 
-namespace BankConsoleApplication.DataSeed
+namespace GicConsole.DataSeed
 {
     internal class DataSeed
     {

@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35219.272
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankConsoleApplication", "BankConsoleApplication.csproj", "{80620BC2-ACA7-47E5-9E0D-091695162B77}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GicConsole", "GicConsole.csproj", "{80620BC2-ACA7-47E5-9E0D-091695162B77}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "..\Infrastructure\Infrastructure.csproj", "{04437C6E-73C1-4DDA-8687-B5EF8C8D61E5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure", "..\Infrastructure\Infrastructure.csproj", "{04437C6E-73C1-4DDA-8687-B5EF8C8D61E5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "..\Domain\Domain.csproj", "{2F6B1874-0522-497F-B6BD-4F03BD2BFE3B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domain", "..\Domain\Domain.csproj", "{2F6B1874-0522-497F-B6BD-4F03BD2BFE3B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "..\Test\Test.csproj", "{356EB691-51C8-489F-85A9-F5051C379673}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test", "..\Test\Test.csproj", "{356EB691-51C8-489F-85A9-F5051C379673}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

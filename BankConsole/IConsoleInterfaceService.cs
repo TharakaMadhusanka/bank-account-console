@@ -1,4 +1,4 @@
-﻿namespace BankConsole
+﻿namespace GicConsole
 {
     internal interface IConsoleInterfaceService
     {

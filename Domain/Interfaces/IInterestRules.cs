@@ -1,6 +1,6 @@
 ﻿using Domain;
 
-namespace Infrastructure.Interfaces
+namespace Domain.Interfaces
 {
     public interface IInterestRuleRepository : IGenericRepository<InterestRules>
     {

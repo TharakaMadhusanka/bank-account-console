@@ -1,9 +1,9 @@
 ﻿using Domain;
-using Infrastructure.Interfaces;
+using Domain.Interfaces;
 
 namespace Infrastructure.Repositories
 {
-    public class InterestRuleRepository(GicBankDbContext bankDbContext) : GenericRepository<InterestRules>(bankDbContext), IInterestRuleRepository
+    public class InterestRuleRepository(GicBankDbContext context) : GenericRepository<InterestRules>(context), IInterestRuleRepository
     {
     }
 }
