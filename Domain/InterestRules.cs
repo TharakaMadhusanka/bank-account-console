@@ -1,8 +1,11 @@
-﻿namespace Domain
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Domain
 {
     public class InterestRules
     {
         public Guid Id { get; set; }
+        [Range(0, 100)]
         public decimal AnnualRate { get; set; }
         public required string RuleId { get; set; }
         public DateTime EffectiveFromDate { get; set; }

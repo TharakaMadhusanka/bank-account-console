@@ -19,17 +19,17 @@ namespace BankConsoleApplication.DataSeed
                 {
                     Id = Guid.NewGuid(),
                     RuleId = $"RULE0{index.ToString(CultureInfo.InvariantCulture)}",
-                    AnnualRate = random.Next(5),
+                    AnnualRate = random.Next(1, 5),
                     UpdatedDate = DateTime.Now,
                     CreatedDate = DateTime.Now,
                     EffectiveFromDate = range.Item1,
                     EffectiveToDate = range.Item2
                 });
             }
-            return interestRules;
+            return [.. interestRules.OrderBy(x => x.EffectiveFromDate)];
         }
 
-        private IEnumerable<(DateTime, DateTime)> GenerateDateRanges(int year)
+        private static IEnumerable<(DateTime, DateTime)> GenerateDateRanges(int year)
         {
             var startDate = new DateTime(year, 1, 1);
             var endDate = new DateTime(year, 12, 31);

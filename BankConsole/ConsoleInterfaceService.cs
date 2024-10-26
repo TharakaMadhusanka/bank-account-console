@@ -24,7 +24,8 @@ namespace BankConsoleApplication
             await SeedDataAsync();
 
             var interestRatesList = await _interestRuleRepository.GetAllAsync();
-            foreach (var interestRates in interestRatesList) Console.WriteLine(interestRates);
+            foreach (var interestRates in interestRatesList) Console.WriteLine(interestRates.RuleId, interestRates.EffectiveFromDate.ToString(),
+                interestRates.EffectiveToDate.ToString());
             Console.ReadKey();
         }
 
@@ -32,11 +33,12 @@ namespace BankConsoleApplication
         // But as for the Demo and Assignment Purpose added this Data Seeding
         private async Task SeedDataAsync()
         {
+            if (await _interestRuleRepository.ExistAsync()) { return; }
             var dataSeed = new DataSeed.DataSeed();
-            var context = _serviceProvider.GetRequiredService<GicBankContext>();
+            var context = _serviceProvider.GetRequiredService<GicBankDbContext>();
             await context.Database.EnsureCreatedAsync();
             await context.InterestRules.AddRangeAsync(dataSeed.GetInterestRules());
-            context.SaveChanges();
+            await context.SaveChangesAsync();
         }
     }
 }

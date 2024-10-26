@@ -3,9 +3,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
-    public class GenericRepository<T>(DbContext context) : IGenericRepository<T> where T : class
+    public class GenericRepository<T>(GicBankDbContext bankDbContext) : IGenericRepository<T> where T : class
     {
-        protected readonly DbContext _context = context;
+        private readonly GicBankDbContext _context = bankDbContext;
+
+        public async Task<bool> ExistAsync()
+        {
+            return await _context.Set<T>().AnyAsync();
+        }
 
         public virtual async Task<IEnumerable<T>> GetAllAsync()
         {
