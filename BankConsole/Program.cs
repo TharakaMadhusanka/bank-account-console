@@ -34,7 +34,8 @@ services.AddScoped<IAccountRepository, AccountRepository>();
 services.AddScoped<IAccountHolderRepository, AccountHolderRepository>();
 services.AddScoped<IGicTransactionDomainService, GicTransactionDomainService>();
 services.AddScoped<IInterestRuleDomainService, InterestRuleDomainService>();
-services.AddTransient<IInterestRuleRepository, InterestRuleRepository>();
+services.AddScoped<IInterestRuleRepository, InterestRuleRepository>();
+services.AddScoped<IAccountStatementDomainService, AccountStatementDomainService>();
 #endregion
 
 // DI Container

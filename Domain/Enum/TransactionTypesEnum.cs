@@ -8,5 +8,7 @@ namespace Domain.Enum
         Withdraw = 1,
         [Display(Name = "D")]
         Deposit,
+        [Display(Name = "I")]
+        Interest,
     }
 }

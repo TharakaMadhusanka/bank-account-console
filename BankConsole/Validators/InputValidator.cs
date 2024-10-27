@@ -32,12 +32,21 @@ namespace GicConsole.Validators
         }
         public bool IsValidTransactionInput(string[] inputTransaction)
         {
-            return IsValidDate(inputTransaction[0]) && IsValidTransactionType(inputTransaction[2]) && IsValidTransactionAmount(inputTransaction[3]);
+            return inputTransaction.Length == 4 && IsValidDate(inputTransaction[0])
+                && IsValidTransactionType(inputTransaction[2]) && IsValidTransactionAmount(inputTransaction[3]);
         }
 
         public bool IsValidInterestRuleRequest(string[] inputTransaction)
         {
-            return IsValidDate(inputTransaction[0]) && IsValidInterestRate(inputTransaction[2]);
+            return inputTransaction.Length == 3 && IsValidDate(inputTransaction[0]) && IsValidInterestRate(inputTransaction[2]);
+        }
+        public bool IsValidYearMonth(string[] inputTransaction)
+        {
+            return inputTransaction[1].Length == 6 && inputTransaction[1].All(char.IsDigit);
+        }
+        public bool IsValidAccountStatementRequest(string[] inputRequest)
+        {
+            return inputRequest.Length == 2 && IsValidYearMonth(inputRequest);
         }
     }
 }

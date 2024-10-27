@@ -7,6 +7,7 @@ using GicConsole.Constants;
 using GicConsole.Interface;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
+using System.Transactions;
 
 namespace GicConsole.Services
 {
@@ -15,14 +16,17 @@ namespace GicConsole.Services
         private readonly IInputValidator _inputValidator;
         private readonly IGicTransactionDomainService _transactionDomainService;
         private readonly IInterestRuleDomainService _interestRuleDomainService;
+        private readonly IAccountStatementDomainService _accountStatementDomainService;
 
         public GicConsoleService(IInputValidator inputValidator,
             IGicTransactionDomainService gicTransactionDomainService,
-            IInterestRuleDomainService interestRuleDomainService)
+            IInterestRuleDomainService interestRuleDomainService,
+            IAccountStatementDomainService accountStatementDomainService)
         {
             _inputValidator = inputValidator;
             _transactionDomainService = gicTransactionDomainService;
             _interestRuleDomainService = interestRuleDomainService;
+            _accountStatementDomainService = accountStatementDomainService;
         }
 
         public async Task WelcomeAndInitTransactionsAsync()
@@ -30,7 +34,6 @@ namespace GicConsole.Services
             await MainMenu(GetScreenMainMessage(GicConstants.WelcomeMessage));
             Console.ReadLine();
         }
-
         private async Task MainMenu(string message)
         {
             Console.WriteLine(message);
@@ -39,31 +42,33 @@ namespace GicConsole.Services
             await ActionFlow(input[0]);
         }
 
+        #region Action Manager
         private async Task ActionFlow(char input)
         {
 
             switch (char.ToUpper(input))
             {
                 case 'T':
-                    InputTransactions();
+                    await InputTransactionsAsync();
                     break;
                 case 'I':
-                    DefineInterestRulesAsync();
+                    await DefineInterestRulesAsync();
                     break;
                 case 'P':
-                    DefineInterestRulesAsync();
+                    await RetrieveAccountStatementWithInterestAsync();
                     break;
                 case 'Q':
-                    Console.Clear();
+                    Console.WriteLine(GicConstants.QuitMessage);
                     break;
                 default:
                     await MainMenu(GetScreenMainMessage(GicConstants.WelcomeMessage));
                     break;
             }
         }
+        #endregion
 
         #region Input Transaction
-        public async void InputTransactions()
+        public async Task InputTransactionsAsync()
         {
             Console.WriteLine(GicConstants.InputTransactions);
             var inputTransaction = Console.ReadLine();
@@ -77,7 +82,7 @@ namespace GicConsole.Services
             // Deduct or Deposit to Current Account
             // Update Total Balance
             // Transaction Scope has the proble of Transactions tracking which detach the entitis
-            //using var transactionScope = new TransactionScope();
+            using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
             try
             {
                 var statement = await _transactionDomainService.InputTransactionHandleAsync(new InputTransactionRequestParamsDao
@@ -88,7 +93,7 @@ namespace GicConsole.Services
                     Amount = sanitizedInputTransactionDetails[3]
                 });
                 // Complete Transaction will commit data to DB
-                //transactionScope.Complete();
+                transactionScope.Complete();
                 // After that Print the statement
                 // If not compelte it won't Print the Statement and throw error
                 // When Invalid Request what is the expectation >_<
@@ -100,12 +105,10 @@ namespace GicConsole.Services
                 Console.WriteLine("System encountered error and your transction is reverted! Please reach out to bank officer.");
             }
         }
-
-        private async void InputTransactionPrintStatement(InputTransactionResponseDto statement)
+        private static void InputTransactionPrintStatement(InputTransactionResponseDto statement)
         {
             // thread lock
-            var statementBuilder = new StringBuilder();
-            statementBuilder.AppendLine(GicConstants.InputTransactionStatement.Replace("<AccountNo>", statement.AccountNo));
+            var statementBuilder = ConstructStringBuilder(GicConstants.InputTransactionStatement.Replace("<AccountNo>", statement.AccountNo));
             if (!statement.IsTransactionSuccess || statement.TransactionRecordsList is null)
             {
                 Console.WriteLine(statementBuilder.ToString());
@@ -124,7 +127,7 @@ namespace GicConsole.Services
         #endregion
 
         #region Interest Rules Define
-        private async void DefineInterestRulesAsync()
+        private async Task DefineInterestRulesAsync()
         {
             Console.WriteLine(GicConstants.DefineInterestRule);
             var inputTransaction = Console.ReadLine();
@@ -134,20 +137,21 @@ namespace GicConsole.Services
             if (!_inputValidator.IsValidInterestRuleRequest(sanitizedInputTransactionDetails))
             { await MainMenu(GetScreenMainMessage(GicConstants.WelcomeMessage)); return; }
             // Transaction Scope
+            using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
             try
             {
                 var interestRules = await _interestRuleDomainService.InterestRuleDefineRequestHandleAsync(new InterestRuleDefineRequestParamsDao
                 { Date = sanitizedInputTransactionDetails[0], InterestRate = sanitizedInputTransactionDetails[2], Rule = sanitizedInputTransactionDetails[1] });
+                transactionScope.Complete();
                 PrintInterestRulesStatement(interestRules);
                 await MainMenu(GicConstants.NextActionConsentMessage);
 
             }
             catch (DbUpdateException) { Console.WriteLine("Something went wrong and we cannot create the defnition."); }
         }
-        private async void PrintInterestRulesStatement(IReadOnlyCollection<InterestRuleDto> statement)
+        private static void PrintInterestRulesStatement(IReadOnlyCollection<InterestRuleDto> statement)
         {
-            var statementBuilder = new StringBuilder();
-            statementBuilder.AppendLine(GicConstants.InterestRulesStatement);
+            var statementBuilder = ConstructStringBuilder(GicConstants.InterestRulesStatement);
             foreach (var item in statement)
             {
                 statementBuilder.AppendLine($"|{item.Date}\t" +
@@ -155,14 +159,51 @@ namespace GicConsole.Services
                     $"|{item.Rate}\t|\n");
             };
             Console.WriteLine(statementBuilder.ToString());
-            await MainMenu(GicConstants.NextActionConsentMessage);
         }
         #endregion
 
+        #region Account Statement
+        public async Task RetrieveAccountStatementWithInterestAsync()
+        {
+            Console.WriteLine(GicConstants.PrintAccountStatementMessage);
+            var inputTransaction = Console.ReadLine();
+            // AccountNo YYYYMM
+            if (inputTransaction is null) { await MainMenu(GetScreenMainMessage(GicConstants.WelcomeMessage)); return; }
+            var sanitizedInputTransactionDetails = inputTransaction.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (!_inputValidator.IsValidAccountStatementRequest(sanitizedInputTransactionDetails))
+            { await MainMenu(GetScreenMainMessage(GicConstants.WelcomeMessage)); return; }
+            var statement = await _accountStatementDomainService.AccountStatementHandleAsync(new AccountStatementInputRequestDao
+            { AccountNo = sanitizedInputTransactionDetails[0], YearMonth = sanitizedInputTransactionDetails[1] });
+            PrintAccountStatementAsync(statement);
+            await MainMenu(GicConstants.NextActionConsentMessage);
+        }
+        private static void PrintAccountStatementAsync(IReadOnlyCollection<TransactionRecordDto> statement)
+        {
+            var statementBuilder = ConstructStringBuilder(GicConstants.PrintAccountStatementMessage);
+            foreach (var item in statement)
+            {
+                statementBuilder.AppendLine($"|{item.TransactionDate}\t" +
+                    $"|{item.TransactionNo}\t" +
+                    $"|{item.TransactionType}\t" +
+                    $"|{item.Amount.ToString("#,0.00")}\t" +
+                    $"|{item.EndBalance.ToString("#,0.00")}|\n");
+            };
+            Console.WriteLine(statementBuilder.ToString());
+        }
+        #endregion
+
+        #region Console Screen
         private static string GetScreenMainMessage(string titleMessage)
         {
             return GicConstants.ActionsMenuAndTitleMessage.Replace("<TitleMessage>", titleMessage);
         }
+        #endregion
 
+        private static StringBuilder ConstructStringBuilder(string sectionMessage)
+        {
+            return new StringBuilder()
+                 .Append(GicConstants.SectionBreaker)
+                 .AppendLine(sectionMessage);
+        }
     }
 }

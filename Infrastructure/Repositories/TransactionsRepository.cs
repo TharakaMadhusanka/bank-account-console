@@ -11,9 +11,14 @@ namespace Infrastructure.Repositories
         private readonly GicBankDbContext _context = context;
         public async Task<int> GetLatestRunNoSequenceAsync(string transactionDate)
         {
-            return await _context.Transactions
-                .Where(x => x.TransactionNumber.StartsWith(transactionDate))
-                .MaxAsync(x => Convert.ToInt32(x.TransactionNumber.Substring(10, 2)));
+            var isExist = await _context.Transactions
+                .AnyAsync(x => x.TransactionNumber.StartsWith(transactionDate));
+
+            return isExist
+                    ? await _context.Transactions
+                        .Where(x => x.TransactionNumber.StartsWith(transactionDate))
+                        .MaxAsync(x => Convert.ToInt32(x.TransactionNumber.Substring(10, 2)))
+                    : 0;
         }
 
         public IQueryable<Transactions> GetTransactionsByExpressionAsync(Expression<Func<Transactions, bool>> expression)
@@ -31,7 +36,8 @@ namespace Infrastructure.Repositories
                     Amount = y.Amount,
                     TransactionNo = y.TransactionNumber,
                     TransactionType = y.CodeTransactionType,
-                    TransactionDate = y.CreatedDate.ToString("yyyyMMdd")
+                    TransactionDate = y.CreatedDate.ToString("yyyyMMdd"),
+                    EndBalance = y.EndBalance,
 
                 })
                 .ToListAsync();

@@ -131,7 +131,7 @@ namespace Domain.GicDomainServices
             // create Transaction Record
             var transaction = new Transactions
             {
-                TransactionNumber = $"{inputTransactionRequestParamsDao.TransactionDate}-{++latestTransactionNo}",
+                TransactionNumber = $"{inputTransactionRequestParamsDao.TransactionDate}-{++latestTransactionNo:00}",
                 Id = Guid.NewGuid(),
                 Account = existingAccount,
                 AccountId = existingAccount.Id,

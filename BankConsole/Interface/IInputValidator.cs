@@ -7,5 +7,6 @@
         bool IsValidTransactionAmount(string transactionAmount);
         bool IsValidTransactionInput(string[] inputTransaction);
         bool IsValidInterestRuleRequest(string[] inputTransaction);
+        bool IsValidAccountStatementRequest(string[] inputRequest);
     }
 }
