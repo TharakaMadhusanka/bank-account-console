@@ -1,4 +1,4 @@
-﻿using Domain;
+﻿using Domain.DomainModels;
 using Domain.Interfaces;
 
 namespace Infrastructure.Repositories

@@ -1,5 +1,6 @@
 ﻿using Domain.Constants;
 using Domain.Dao;
+using Domain.DomainModels;
 using Domain.Dto;
 using Domain.GicDomainInterface;
 using Domain.Interfaces;

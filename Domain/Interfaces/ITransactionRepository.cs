@@ -1,4 +1,5 @@
-﻿using Domain.Dto;
+﻿using Domain.DomainModels;
+using Domain.Dto;
 using System.Linq.Expressions;
 
 namespace Domain.Interfaces

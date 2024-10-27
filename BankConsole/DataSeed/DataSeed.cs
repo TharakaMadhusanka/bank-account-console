@@ -1,4 +1,4 @@
-﻿using Domain;
+﻿using Domain.DomainModels;
 using System.Globalization;
 
 namespace GicConsole.DataSeed

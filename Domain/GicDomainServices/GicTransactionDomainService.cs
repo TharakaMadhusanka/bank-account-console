@@ -1,5 +1,6 @@
 ﻿using Domain.Constants;
 using Domain.Dao;
+using Domain.DomainModels;
 using Domain.Dto;
 using Domain.Enum;
 using Domain.GicDomainInterface;
@@ -92,7 +93,8 @@ namespace Domain.GicDomainServices
                 CreatedDate = dateToUse,
                 Source = ((int)TransactionSource.ATM).ToString(),
                 CodeTransactionType = ((int)TransactionTypes.Deposit).ToString(),
-                Amount = Decimal.Parse(inputTransactionRequestParamsDao.Amount)
+                Amount = Decimal.Parse(inputTransactionRequestParamsDao.Amount),
+                EndBalance = Decimal.Parse(inputTransactionRequestParamsDao.Amount)
             };
 
             await _accountHolderRepository.AddAsync(accountHolder);
@@ -106,10 +108,12 @@ namespace Domain.GicDomainServices
         private async Task<InputTransactionResponseDto> UpdateTransactionDetailsAsync(InputTransactionRequestParamsDao inputTransactionRequestParamsDao,
             Accounts existingAccount)
         {
-            existingAccount.TotalBalance +=
-                inputTransactionRequestParamsDao.TransactionType == TransactionTypes.Deposit
+            var change = inputTransactionRequestParamsDao.TransactionType == TransactionTypes.Deposit
                 ? Decimal.Parse(inputTransactionRequestParamsDao.Amount)
                 : -Decimal.Parse(inputTransactionRequestParamsDao.Amount);
+
+            var endBalance = existingAccount.TotalBalance + change;
+            existingAccount.TotalBalance += change;
             existingAccount.UpdatedDate = DateTime.UtcNow;
 
             // For final balance 0 or less after transaction happens
@@ -135,6 +139,7 @@ namespace Domain.GicDomainServices
                 Source = ((int)TransactionSource.ATM).ToString(),
                 CodeTransactionType = ((int)inputTransactionRequestParamsDao.TransactionType).ToString(),
                 Amount = Decimal.Parse(inputTransactionRequestParamsDao.Amount),
+                EndBalance = endBalance,
             };
 
             await _accountRepository.UpdateAsync(existingAccount);
