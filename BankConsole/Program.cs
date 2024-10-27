@@ -32,8 +32,9 @@ services.AddTransient<IInputValidator, InputValidator>();
 services.AddScoped<ITransactionRepository, TransactionsRepository>();
 services.AddScoped<IAccountRepository, AccountRepository>();
 services.AddScoped<IAccountHolderRepository, AccountHolderRepository>();
-services.AddTransient<IInterestRuleRepository, InterestRuleRepository>();
 services.AddScoped<IGicTransactionDomainService, GicTransactionDomainService>();
+services.AddScoped<IInterestRuleDomainService, InterestRuleDomainService>();
+services.AddTransient<IInterestRuleRepository, InterestRuleRepository>();
 #endregion
 
 // DI Container

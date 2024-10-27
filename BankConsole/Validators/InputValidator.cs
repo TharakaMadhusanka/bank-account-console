@@ -25,9 +25,19 @@ namespace GicConsole.Validators
             };
             return false;
         }
+        public bool IsValidInterestRate(string interestRate)
+        {
+            Decimal.TryParse(interestRate, NumberStyles.Currency, null, out decimal validRate);
+            return validRate >= 0 && validRate <= 100;
+        }
         public bool IsValidTransactionInput(string[] inputTransaction)
         {
             return IsValidDate(inputTransaction[0]) && IsValidTransactionType(inputTransaction[2]) && IsValidTransactionAmount(inputTransaction[3]);
+        }
+
+        public bool IsValidInterestRuleRequest(string[] inputTransaction)
+        {
+            return IsValidDate(inputTransaction[0]) && IsValidInterestRate(inputTransaction[2]);
         }
     }
 }

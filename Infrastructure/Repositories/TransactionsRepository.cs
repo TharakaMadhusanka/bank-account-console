@@ -13,7 +13,7 @@ namespace Infrastructure.Repositories
         {
             return await _context.Transactions
                 .Where(x => x.TransactionNumber.StartsWith(transactionDate))
-                .MaxAsync(x => Convert.ToInt32(x.TransactionNumber.Substring(10)));
+                .MaxAsync(x => Convert.ToInt32(x.TransactionNumber.Substring(10, 2)));
         }
 
         public IQueryable<Transactions> GetTransactionsByExpressionAsync(Expression<Func<Transactions, bool>> expression)

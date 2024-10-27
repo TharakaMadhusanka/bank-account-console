@@ -2,7 +2,6 @@
 
 namespace Domain.Interfaces
 {
-    // This is for basic CRUD operations
     public interface IGenericRepository<T> where T : class
     {
         Task<bool> AnyAsync();
@@ -12,5 +11,6 @@ namespace Domain.Interfaces
         Task<T> AddAsync(T entity);
         Task UpdateAsync(T entity);
         Task DeleteAsync(T entity);
+        Task UpsertEntity(T entity);
     }
 }

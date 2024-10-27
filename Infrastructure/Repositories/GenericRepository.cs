@@ -4,9 +4,9 @@ using System.Linq.Expressions;
 
 namespace Infrastructure.Repositories
 {
-    public class GenericRepository<T>(GicBankDbContext bankDbContext) : IGenericRepository<T> where T : class
+    public class GenericRepository<T>(GicBankDbContext context) : IGenericRepository<T> where T : class
     {
-        private readonly GicBankDbContext _context = bankDbContext;
+        private readonly GicBankDbContext _context = context;
 
         public async Task<bool> AnyAsync()
         {
@@ -30,15 +30,6 @@ namespace Infrastructure.Repositories
 
         public virtual async Task<T> AddAsync(T entity)
         {
-            var entry = _context.Entry(entity);
-            if (entry.State == EntityState.Modified)
-            {
-                Console.WriteLine("Entity is modified");
-            }
-            else
-            {
-                Console.WriteLine("Entity state is not modified");
-            }
             await _context.Set<T>().AddAsync(entity);
             await _context.SaveChangesAsync();
             return entity;
@@ -56,6 +47,24 @@ namespace Infrastructure.Repositories
             _context.Set<T>().Remove(entity);
             await _context.SaveChangesAsync();
 
+        }
+
+        // Upsert Entity Method
+        // Find by dynamic expression
+        public async Task UpsertEntity(T entity)
+        {
+            var existingEntity = await _context.Set<T>().FindAsync();
+
+            if (existingEntity == null)
+            {
+                await _context.AddAsync(entity);
+            }
+            else
+            {
+                _context.Entry(existingEntity).CurrentValues.SetValues(entity);
+            }
+
+            await _context.SaveChangesAsync();
         }
     }
 }

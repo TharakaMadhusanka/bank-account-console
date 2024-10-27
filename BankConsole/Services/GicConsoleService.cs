@@ -7,7 +7,6 @@ using GicConsole.Constants;
 using GicConsole.Interface;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
-using System.Transactions;
 
 namespace GicConsole.Services
 {
@@ -15,11 +14,15 @@ namespace GicConsole.Services
     {
         private readonly IInputValidator _inputValidator;
         private readonly IGicTransactionDomainService _transactionDomainService;
+        private readonly IInterestRuleDomainService _interestRuleDomainService;
 
-        public GicConsoleService(IInputValidator inputValidator, IGicTransactionDomainService gicTransactionDomainService)
+        public GicConsoleService(IInputValidator inputValidator,
+            IGicTransactionDomainService gicTransactionDomainService,
+            IInterestRuleDomainService interestRuleDomainService)
         {
             _inputValidator = inputValidator;
             _transactionDomainService = gicTransactionDomainService;
+            _interestRuleDomainService = interestRuleDomainService;
         }
 
         public async Task WelcomeAndInitTransactionsAsync()
@@ -45,10 +48,10 @@ namespace GicConsole.Services
                     InputTransactions();
                     break;
                 case 'I':
-                    InputTransactions();
+                    DefineInterestRulesAsync();
                     break;
                 case 'P':
-                    PrintStatement();
+                    DefineInterestRulesAsync();
                     break;
                 case 'Q':
                     Console.Clear();
@@ -59,6 +62,7 @@ namespace GicConsole.Services
             }
         }
 
+        #region Input Transaction
         public async void InputTransactions()
         {
             Console.WriteLine(GicConstants.InputTransactions);
@@ -72,7 +76,8 @@ namespace GicConsole.Services
             // Make Transaction
             // Deduct or Deposit to Current Account
             // Update Total Balance
-            using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
+            // Transaction Scope has the proble of Transactions tracking which detach the entitis
+            //using var transactionScope = new TransactionScope();
             try
             {
                 var statement = await _transactionDomainService.InputTransactionHandleAsync(new InputTransactionRequestParamsDao
@@ -83,7 +88,7 @@ namespace GicConsole.Services
                     Amount = sanitizedInputTransactionDetails[3]
                 });
                 // Complete Transaction will commit data to DB
-                transactionScope.Complete();
+                //transactionScope.Complete();
                 // After that Print the statement
                 // If not compelte it won't Print the Statement and throw error
                 // When Invalid Request what is the expectation >_<
@@ -116,8 +121,43 @@ namespace GicConsole.Services
             Console.WriteLine(statementBuilder.ToString());
 
         }
-        private static void DefineInterestRules() { }
-        private static void PrintStatement() { }
+        #endregion
+
+        #region Interest Rules Define
+        private async void DefineInterestRulesAsync()
+        {
+            Console.WriteLine(GicConstants.DefineInterestRule);
+            var inputTransaction = Console.ReadLine();
+            // YYYYMMDD Rule InterestRate
+            if (inputTransaction is null) { await MainMenu(GetScreenMainMessage(GicConstants.WelcomeMessage)); return; }
+            var sanitizedInputTransactionDetails = inputTransaction.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (!_inputValidator.IsValidInterestRuleRequest(sanitizedInputTransactionDetails))
+            { await MainMenu(GetScreenMainMessage(GicConstants.WelcomeMessage)); return; }
+            // Transaction Scope
+            try
+            {
+                var interestRules = await _interestRuleDomainService.InterestRuleDefineRequestHandleAsync(new InterestRuleDefineRequestParamsDao
+                { Date = sanitizedInputTransactionDetails[0], InterestRate = sanitizedInputTransactionDetails[2], Rule = sanitizedInputTransactionDetails[1] });
+                PrintInterestRulesStatement(interestRules);
+                await MainMenu(GicConstants.NextActionConsentMessage);
+
+            }
+            catch (DbUpdateException) { Console.WriteLine("Something went wrong and we cannot create the defnition."); }
+        }
+        private async void PrintInterestRulesStatement(IReadOnlyCollection<InterestRuleDto> statement)
+        {
+            var statementBuilder = new StringBuilder();
+            statementBuilder.AppendLine(GicConstants.InterestRulesStatement);
+            foreach (var item in statement)
+            {
+                statementBuilder.AppendLine($"|{item.Date}\t" +
+                    $"|{item.RuleId}\t" +
+                    $"|{item.Rate}\t|\n");
+            };
+            Console.WriteLine(statementBuilder.ToString());
+            await MainMenu(GicConstants.NextActionConsentMessage);
+        }
+        #endregion
 
         private static string GetScreenMainMessage(string titleMessage)
         {

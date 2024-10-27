@@ -6,5 +6,6 @@
         bool IsValidTransactionType(string transactionType);
         bool IsValidTransactionAmount(string transactionAmount);
         bool IsValidTransactionInput(string[] inputTransaction);
+        bool IsValidInterestRuleRequest(string[] inputTransaction);
     }
 }
